@@ -13,9 +13,9 @@ library(DBI)
 library(RMySQL)
 
 db_user <- 'admin'
-db_password <- 'testsql!'
-db_name <- 'oudb'
-db_host <- 'sqltest.clh43re5lq5h.us-east-1.rds.amazonaws.com'
+db_password <- 'son11207'
+db_name <- 'joenewnee'
+db_host <- 'database-1.cikcbzxocq20.us-east-2.rds.amazonaws.com'
 db_port <- 3306
 
 mydb <- dbConnect(MySQL(), user = db_user, password = db_password, dbname = db_name, host = db_host, port = db_port)
@@ -26,12 +26,12 @@ summary(mydb)
 ## Load OU Data
 ```{r}
 #Student demographic data
-studentInfo <- read.csv("studentInfo.csv", header = TRUE)
+studentInfo <- read.csv("anonymisedData/studentInfo.csv", header = TRUE)
 #Student assessment data
-studentAssessment <- read.csv("studentAssessment.csv", header = TRUE)
+studentAssessment <- read.csv("anonymisedData/studentAssessment.csv", header = TRUE)
 #Course data
-courses <- read.csv("courses.csv", header = TRUE)
-studentRegistration <- read.csv("studentRegistration.csv", header = TRUE)
+courses <- read.csv("anonymisedData/courses.csv", header = TRUE)
+studentRegistration <- read.csv("anonymisedData/studentRegistration.csv", header = TRUE)
 ```
 
 ## Write data to the DB using the DBI package
@@ -53,7 +53,10 @@ dbReadTable(mydb, 'studentInfo')
 
 #EXERCISE 1
 #Make two toy data sets with at least three variables and at least 30 rows each in them. Have a mix of numeric and character variables. Transfer these dataframes to your SQL database using the DBI commands. Name the tables whatever you like.
-
+x<-rnorm(30)
+y<-rchisq(30,2)
+z<-rpois(30,.1)
+Toy<-data.frame(x,y,z)
 ```
 
 ## Getting into SQL - READING
@@ -83,7 +86,10 @@ dbGetQuery(mydb, "SELECT COUNT(*) FROM studentAssessment WHERE score > 50 AND id
 #Read one of your toy data tables, make sure the output is ordered in descending order, you rename one of the variables and the output is limited to the first 20 rows.
 
 #Read the other table according to a condition of one of the variables.
-
+dbWriteTable(mydb, "Toydata", Toy)
+dbListTables(mydb)
+dbReadTable(mydb,'Toydata')
+dbGetQuery(mydb, "SELECT x AS 'Random Normal' FROM Toydata LIMIT 20;")
 ```
 
 ## Getting into SQL - UPDATING
@@ -122,7 +128,8 @@ dbGetQuery(mydb, "SELECT * FROM studentAssessment ORDER BY id_student LIMIT 10;"
 #EXERCISE 3
 #Insert a new row in one of your toy data tables leaving one variable empty. Change one value in your other table. Display your new tables. Delete the row you edited and the row you inserted. 
 
-
+dbGetQuery(mydb, "UPDATE Toydata SET x='NULL' WHERE z='1';")
+dbGetQuery(mydb, "SELECT * FROM Toydata")
 ```
 
 ## Add/Deleting Table
@@ -157,7 +164,21 @@ dbGetQuery(mydb, "DROP TABLE IF EXISTS test;")
 
 #EXERCISE 4
 #Create a table that is exactly the same as your first toy data table but this time use SQL commands. Display your new table. Then delete the original table. 
+dbGetQuery(mydb, "CREATE TABLE toy (
+  x INTEGER, 
+  y INTEGER,
+  z INTEGER
+  );")
+dbGetQuery(mydb, "INSERT INTO toy VALUES (1,2,1);")
+dbGetQuery(mydb, "INSERT INTO toy VALUES (-1,.1,1);")
+dbGetQuery(mydb, "INSERT INTO toy VALUES (0.4,-2,0);")
+dbGetQuery(mydb, "INSERT INTO toy VALUES (0.4,-2,0);")
+dbReadTable(mydb, 'toy')
 
+
+dbGetQuery(mydb,"INSERT INTO toy (x,y,z) SELECT score, id_student, date_submitted FROM studentAssessment;")
+dbGetQuery(mydb, "DROP TABLE toy;")
+dbGetQuery(mydb, "SELECT * FROM toy;") #This should produce an error
 ```
 
 # NULL Value
